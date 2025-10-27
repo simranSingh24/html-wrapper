@@ -7,24 +7,23 @@
   <style>
     body {
       font-family: "Georgia", serif;
-      background: #ffffff; /* Pure white background */
+      background: #ffffff;
       color: #333;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
       margin: 0;
-      padding: 1rem;
-      text-align: center;
+      padding: 2rem 1rem;
+      text-align: left; /* align to top-left */
+    }
+    #quote-box {
+      max-width: 800px;
+      margin: 0 auto;
     }
     blockquote {
-      font-size: 1.4rem;
-      line-height: 1.6;
-      margin: 0 0 0.5rem 0;
+      font-size: 1.1rem; /* smaller font size */
+      line-height: 1.4;
+      margin: 0 0 0.3rem 0;
     }
     footer {
-      font-size: 1rem;
+      font-size: 0.9rem;
       color: #555;
     }
     .loading {
@@ -39,34 +38,30 @@
   </div>
 
   <script>
+    const proxy = "https://api.allorigins.win/get?url=";
+
     const apis = [
       {
-        name: "Quotable",
+        name: "Quotable Quotes",
         url: "https://api.quotable.io/random",
         parse: data => ({ text: data.content, author: data.author })
       },
       {
-        name: "Quote Garden",
-        url: "https://quote-garden.herokuapp.com/api/v3/quotes/random",
-        parse: data => ({
-          text: data.data[0].quoteText,
-          author: data.data[0].quoteAuthor
-        })
-      },
-      {
         name: "ZenQuotes",
         url: "https://zenquotes.io/api/random",
-        parse: data => ({ text: data[0].q, author: data[0].a })
+        parse: data => ({ text: data[0].q, author: data[0].a }),
+        useProxy: true
+      },
+      {
+        name: "Motivational Spark",
+        url: "https://motivational-spark-api.vercel.app/api/quotes/random",
+        parse: data => ({ text: data.quote, author: data.author })
       },
       {
         name: "Buddha API",
         url: "https://buddha-api.com/api/random",
-        parse: data => ({ text: data.quote, author: data.author })
-      },
-      {
-        name: "Quotes API (Vercel)",
-        url: "https://qapi.vercel.app/api/random",
-        parse: data => ({ text: data.quote, author: data.author })
+        parse: data => ({ text: data.quote, author: data.author }),
+        useProxy: true
       }
     ];
 
@@ -75,22 +70,25 @@
 
       for (let api of apis) {
         try {
-          const response = await fetch(api.url);
+          const fetchUrl = api.useProxy ? proxy + encodeURIComponent(api.url) : api.url;
+          const response = await fetch(fetchUrl);
+
           if (!response.ok) throw new Error("Bad response");
-          const data = await response.json();
-          const quote = api.parse(data);
+
+          const jsonData = api.useProxy ? JSON.parse((await response.json()).contents) : await response.json();
+          const quote = api.parse(jsonData);
 
           container.innerHTML = `
             <blockquote>“${quote.text}”</blockquote>
             <footer>— ${quote.author || "Unknown"} <small>(${api.name})</small></footer>
           `;
-          return; // Stop once a quote successfully loads
+          return; // Stop at first success
         } catch (err) {
           console.warn(`${api.name} failed, trying next...`, err);
         }
       }
 
-      container.innerHTML = `<p> "Today is a new day" </p>`;
+      container.innerHTML = `<p>|Today is a new day|</p>`;
     }
 
     loadQuote();
