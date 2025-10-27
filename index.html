@@ -38,22 +38,24 @@
     <p class="loading">Fetching today’s quote...</p>
   </div>
 
-  <script>
-    async function loadQuote() {
-      const container = document.getElementById("quote-box");
-      try {
-        const response = await fetch("https://zenquotes.io/api/today");
-        const data = await response.json();
-        const quote = data[0];
-        container.innerHTML = `
-          <blockquote>“${quote.q}”</blockquote>
-          <footer>— ${quote.a}</footer>
-        `;
-      } catch (err) {
-        container.innerHTML = `<p>⚠️ Could not load quote. Please try again later.</p>`;
-      }
+<script>
+  async function loadQuote() {
+    const container = document.getElementById("quote-box");
+    try {
+      const response = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent("https://zenquotes.io/api/today"));
+      const data = await response.json();
+      const quotes = JSON.parse(data.contents);
+      const quote = quotes[0];
+      container.innerHTML = `
+        <blockquote>“${quote.q}”</blockquote>
+        <footer>— ${quote.a}</footer>
+      `;
+    } catch (err) {
+      container.innerHTML = `<p>⚠️ Could not load quote. Please try again later.</p>`;
+      console.error(err);
     }
-    loadQuote();
-  </script>
+  }
+  loadQuote();
+</script>
 </body>
 </html>
